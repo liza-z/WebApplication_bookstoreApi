@@ -1,6 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using WebApplication_bookstoreApi.Data;
 using WebApplication_bookstoreApi.Models;
+using WebApplication_bookstoreApi.Models.DTOs;
+using WebApplication_bookstoreApi.Services;
 
 namespace WebApplication_bookstoreApi.Controllers
 {
@@ -8,128 +12,139 @@ namespace WebApplication_bookstoreApi.Controllers
     [ApiController]
     public class BooksController : ControllerBase
     {
+        private readonly IBookService bookService;
 
-        private static List<Book> books = new List<Book>()
+        public BooksController(IBookService service)
         {
-            new Book() { Title = "The Hobbit", Author = "J.R.R. Tolkien", Genre = "Fantasy", Pages = 310, Price = 15.99f, CoverImg = "https://example.com/images/the-hobbit.jpg", Description = "A fantasy novel about Bilbo Baggins' adventurous quest to win a share of treasure guarded by a dragon.", IsInStock = true },
-            new Book() { Title = "1984", Author = "George Orwell", Genre = "Dystopian", Pages = 328, Price = 12.50f, CoverImg = "https://example.com/images/1984.jpg", Description = "A dystopian novel set in a totalitarian society ruled by Big Brother.", IsInStock = true },
-            new Book() { Title = "To Kill a Mockingbird", Author = "Harper Lee", Genre = "Classic", Pages = 281, Price = 14.25f, CoverImg = "https://example.com/images/to-kill-a-mockingbird.jpg", Description = "A novel about racial injustice and moral growth in the American South.", IsInStock = false },
-            new Book() { Title = "The Great Gatsby", Author = "F. Scott Fitzgerald", Genre = "Classic", Pages = 180, Price = 10.99f, CoverImg = "https://example.com/images/the-great-gatsby.jpg", Description = "A story about the mysterious millionaire Jay Gatsby and his obsession with Daisy Buchanan.", IsInStock = true },
-            new Book() { Title = "The Catcher in the Rye", Author = "J.D. Salinger", Genre = "Fiction", Pages = 277, Price = 11.75f, CoverImg = "https://example.com/images/the-catcher-in-the-rye.jpg", Description = "A novel following the experiences of Holden Caulfield in New York City.", IsInStock = true }
-        };
+            this.bookService = service;
+        }
 
         [HttpGet]
-        public IActionResult AllBooks()
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<BookDto>>> GetBooks()
         {
+            var books = await bookService.GetBooksAsync();
+
             return Ok(books);
         }
 
-
-        [HttpGet("(id)")]
-        public IActionResult GetBookById(int id)
+        [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<BookDto>> GetBook(int id)
         {
-            var book = books.FirstOrDefault(book => book.Id == id);
-            if(book == null)
+            var book = await bookService.GetBookByIdAsync(id);
+            if (book == null)
             {
-                return BadRequest("Can not find this book!");
+                return NotFound(new { message = "Book not found" });
             }
-
-            return Ok(book);
+            var bookDetail = new BookDto
+            {
+                Id = book.Id,
+                Title = book.Title,
+                Author = book.Author,
+                Genre = book.Genre,
+                Pages = book.Pages,
+                Price = book.Price,
+                CoverImg = book.CoverImg,
+                Description = book.Description,
+                IsInStock = book.IsInStock
+            };
+            return Ok(bookDetail);
         }
 
-        [HttpGet]
-        public IActionResult SearchBook(string? search)
+        [HttpGet("search")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<BookDto>>> SearchBooks([FromQuery] string query)
         {
-            var query = books.AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(search))
+            if (string.IsNullOrWhiteSpace(query))
             {
-
-                query = query.Where(book =>
-                    book.Author.ToLower().Contains(search.ToLower()) ||
-                    book.Title.ToLower().Contains(search.ToLower())
-                );
+                return BadRequest(new { message = "Search query is required" });
             }
-
-            var results = query.ToList();
-
-            if (!results.Any())
-            {
-                return BadRequest("No books have been found.");
-            }
-
-            return Ok(results);
+            var books = await bookService.SearchBookAsync(query);
+            return Ok(books);
         }
 
-        [HttpGet]
-        public IActionResult FilterBookByGenre(string? genre)
-        {
-            var query = books.AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(genre))
-            {
-                query = query.Where(book => book.Genre.ToLower().Contains(genre.ToLower()));
-            }
-
-            var results = query.ToList();
-
-            if (!results.Any())
-            {
-                return BadRequest("No books have been found.");
-            }
-
-            return Ok(results);
-        }
+        //[HttpGet("filter")]
+        //[ProducesResponseType(StatusCodes.Status200OK)]
+        //public async Task<ActionResult<IEnumerable<BookDto>>> FilterBooks([FromQuery] string? genre)
+        //{
+        //    var query = bookService.Books.AsQueryable();
+        //    if (!string.IsNullOrWhiteSpace(genre))
+        //    {
+        //        query = query.Where(b => b.Genre == genre);
+        //    }
+        //    var books = await query
+        //    .Select(b => new BookDto
+        //    {
+        //        Id = b.Id,
+        //        Title = b.Title,
+        //        Author = b.Author,
+        //        Genre = b.Genre,
+        //        Pages = b.Pages,
+        //        Price = b.Price,
+        //        CoverImg = b.CoverImg,
+        //        Description = b.Description,
+        //        IsInStock = b.IsInStock
+        //    })
+        //    .ToListAsync();
+        //    return Ok(books);
+        //}
 
         [HttpPost]
-        public IActionResult AddNewBook(Book newBook)
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<BookDto>> CreateBook(CreateBookDto createBookDto)
         {
-            var book = newBook;
-            book.Id = newBook.Id;
-            book.Title = newBook.Title;
-            book.Author = newBook.Author;
-            book.Pages = newBook.Pages;
-            book.Price = newBook.Price;
-            book.CoverImg = newBook.CoverImg;
-            book.Description = newBook.Description;
-            book.IsInStock = newBook.IsInStock;
-            books.Add(book);
+            await bookService.CreateBook(createBookDto);
 
-            return Ok(book);
+            return CreatedAtAction(nameof(GetBook), new { });
         }
 
-        [HttpPut]
-        public IActionResult UpdateBook(Book updateBook)
+        [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<BookDto>> UpdateBook(int id, UpdateBookDto updateBookDto)
         {
-            var book = books.FirstOrDefault(book => book.Id == updateBook.Id);
+            var updatedBook = await bookService.GetBookByIdAsync(id);
+            if (updatedBook == null)
+            {
+                return NotFound(new { message = "Book not found" });
+            }
+            await bookService.UpdateBook(id, updateBookDto);
+
+            return Ok(new { message = "Book has been updated successfully"});
+        }
+
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult> DeleteBook(int id)
+        {
+            var book = await bookService.GetBookByIdAsync(id);
             if (book == null)
             {
-                return BadRequest("Can not find this book to update!");
+                return NotFound(new { message = "Book not found" });
             }
-
-            book.Id = updateBook.Id;
-            book.Title = updateBook.Title;
-            book.Author = updateBook.Author;
-            book.Pages = updateBook.Pages;
-            book.Price = updateBook.Price;
-            book.CoverImg = updateBook.CoverImg;
-            book.Description = updateBook.Description;
-            book.IsInStock = updateBook.IsInStock;
-
-            return Ok(book);
+            await bookService.DeleteBookAsync(id);
+            return Ok(new { message = "Book has been deleted successfully" });
         }
 
-        [HttpDelete("(id)")]
-        public IActionResult DeleteBook(int id)
-        {
-            var book = books.FirstOrDefault(book => book.Id == id);
-            if (book == null)
-            {
-                return BadRequest("Can not find this book to delete!");
-            }
+        //[HttpGet("genres")]
+        //[ProducesResponseType(StatusCodes.Status200OK)]
+        //public async Task<ActionResult<IEnumerable<string>>> GetGenres()
+        //{
+        //    var genres = await bookService.Books
+        //    .Select(b => b.Genre)
+        //    .Distinct()
+        //    .OrderBy(g => g)
+        //    .ToListAsync();
 
-            books.Remove(book);
-            return Ok("The book has been deleted!");
-        }
+        //    return Ok(genres);
+        //}
+
+
     }
 }
