@@ -15,6 +15,7 @@ builder.Services.AddDbContext<BookstoreContext>
     (options => options.UseSqlServer(builder.Configuration.GetConnectionString("BooksDatabase")));
 
 builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddScoped<ICartItemService, CartItemService>();
 
 var app = builder.Build();
 

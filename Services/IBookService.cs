@@ -11,7 +11,7 @@ namespace WebApplication_bookstoreApi.Services
 
         Task<IEnumerable<BookDto>> SearchBookAsync(string query);
 
-        Task<IEnumerable<BookDto>> FilterBooksAsync(string query);
+        Task<IEnumerable<BookDto>> FilterBooksAsync(string genre);
 
         Task<IEnumerable<Book>> GetGenresAsync();
 

@@ -81,7 +81,6 @@ namespace WebApplication_bookstoreApi.Services
 
         public async Task UpdateBook(int id, UpdateBookDto updateBookDto)
         {
-            //throw new NotImplementedException();
             var book = await GetBookByIdAsync(id);
             book.Title = updateBookDto.Title;
             book.Author = updateBookDto.Author;
@@ -116,7 +115,7 @@ namespace WebApplication_bookstoreApi.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<Book>> GetGenresAsync()
+        public Task<IEnumerable<Book>> GetGenresAsync()
         {
             throw new NotImplementedException();
             //var genres = await _context.Books
@@ -126,25 +125,23 @@ namespace WebApplication_bookstoreApi.Services
             //.ToListAsync();
         }
 
-        public async Task<IEnumerable<BookDto>> FilterBooksAsync(string query)
+        public async Task<IEnumerable<BookDto>> FilterBooksAsync(string genre)
         {
-            throw new NotImplementedException();
-            //var query = _context.Books.AsQueryable();
-
-            //var books = await query
-            //.Select(b => new BookDto
-            //{
-            //    Id = b.Id,
-            //    Title = b.Title,
-            //    Author = b.Author,
-            //    Genre = b.Genre,
-            //    Pages = b.Pages,
-            //    Price = b.Price,
-            //    CoverImg = b.CoverImg,
-            //    Description = b.Description,
-            //    IsInStock = b.IsInStock
-            //})
-            //.ToListAsync();
+            return await _context.Books
+            .Where(b => b.Genre == genre)
+            .Select(b => new BookDto
+            {
+                Id = b.Id,
+                Title = b.Title,
+                Author = b.Author,
+                Genre = b.Genre,
+                Pages = b.Pages,
+                Price = b.Price,
+                CoverImg = b.CoverImg,
+                Description = b.Description,
+                IsInStock = b.IsInStock
+            })
+            .ToListAsync();
         }
     }
 }

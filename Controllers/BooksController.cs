@@ -5,6 +5,7 @@ using WebApplication_bookstoreApi.Data;
 using WebApplication_bookstoreApi.Models;
 using WebApplication_bookstoreApi.Models.DTOs;
 using WebApplication_bookstoreApi.Services;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace WebApplication_bookstoreApi.Controllers
 {
@@ -19,6 +20,11 @@ namespace WebApplication_bookstoreApi.Controllers
             this.bookService = service;
         }
 
+
+        /// <summary>
+        /// Get all books
+        /// </summary>
+        /// <returns>List of books</returns
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<BookDto>>> GetBooks()
@@ -28,6 +34,12 @@ namespace WebApplication_bookstoreApi.Controllers
             return Ok(books);
         }
 
+
+        /// <summary>
+        /// Get specific book by ID
+        /// </summary>
+        /// <param name="id">Book ID</param>
+        /// <returns>Detailed book information</returns>
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -53,7 +65,13 @@ namespace WebApplication_bookstoreApi.Controllers
             return Ok(bookDetail);
         }
 
-        [HttpGet("search")]
+
+        /// <summary>
+        /// Search books by title or author
+        /// </summary>
+        /// <param name="query">Search text</param>
+        /// <returns>Filtered list of books</returns>
+        [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<BookDto>>> SearchBooks([FromQuery] string query)
         {
@@ -65,32 +83,31 @@ namespace WebApplication_bookstoreApi.Controllers
             return Ok(books);
         }
 
-        //[HttpGet("filter")]
-        //[ProducesResponseType(StatusCodes.Status200OK)]
-        //public async Task<ActionResult<IEnumerable<BookDto>>> FilterBooks([FromQuery] string? genre)
-        //{
-        //    var query = bookService.Books.AsQueryable();
-        //    if (!string.IsNullOrWhiteSpace(genre))
-        //    {
-        //        query = query.Where(b => b.Genre == genre);
-        //    }
-        //    var books = await query
-        //    .Select(b => new BookDto
-        //    {
-        //        Id = b.Id,
-        //        Title = b.Title,
-        //        Author = b.Author,
-        //        Genre = b.Genre,
-        //        Pages = b.Pages,
-        //        Price = b.Price,
-        //        CoverImg = b.CoverImg,
-        //        Description = b.Description,
-        //        IsInStock = b.IsInStock
-        //    })
-        //    .ToListAsync();
-        //    return Ok(books);
-        //}
 
+        /// <summary>
+        /// Filter books by genre and year range
+        /// </summary>
+        /// <param name="genre">Genre (optional)</param>
+        /// <returns>Filtered list of books</returns>
+        [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<BookDto>>> FilterBooks([FromQuery] string? genre)
+        {
+            if (string.IsNullOrWhiteSpace(genre))
+            {
+                return BadRequest(new { message = "Genre is required" });
+            }
+            var books = await bookService.FilterBooksAsync(genre);
+            return Ok(books);
+
+        }
+
+
+        /// <summary>
+        /// Add a new book
+        /// </summary>
+        /// <param name="createBookDto">Book data</param>
+        /// <returns>Created book</returns>
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -101,6 +118,13 @@ namespace WebApplication_bookstoreApi.Controllers
             return CreatedAtAction(nameof(GetBook), new { });
         }
 
+
+        /// <summary>
+        /// Update a book
+        /// </summary>
+        /// <param name="id">Book ID</param>
+        /// <param name="updateBookDto">Updated data</param>
+        /// <returns>Updated book</returns>
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -117,6 +141,12 @@ namespace WebApplication_bookstoreApi.Controllers
             return Ok(new { message = "Book has been updated successfully"});
         }
 
+
+        /// <summary>
+        /// Delete a book
+        /// </summary>
+        /// <param name="id">Book ID</param>
+        /// <returns>Deletion confirmation</returns>
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -132,6 +162,11 @@ namespace WebApplication_bookstoreApi.Controllers
             return Ok(new { message = "Book has been deleted successfully" });
         }
 
+
+        /// <summary>
+        /// Get list of available genres
+        /// </summary>
+        /// <returns>List of genres</returns>
         //[HttpGet("genres")]
         //[ProducesResponseType(StatusCodes.Status200OK)]
         //public async Task<ActionResult<IEnumerable<string>>> GetGenres()

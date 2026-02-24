@@ -18,5 +18,6 @@ namespace WebApplication_bookstoreApi.Data
         }
 
         public DbSet<Book> Books { get; set; }
+        public DbSet<CartItem> CartItems { get; set; }
     }
 }
