@@ -13,7 +13,7 @@ namespace WebApplication_bookstoreApi.Services
 
         Task<IEnumerable<BookDto>> FilterBooksAsync(string genre);
 
-        Task<IEnumerable<Book>> GetGenresAsync();
+        Task<IEnumerable<string>> GetGenresAsync();
 
         Task CreateBook(CreateBookDto book);
 

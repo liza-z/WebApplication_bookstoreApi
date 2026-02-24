@@ -115,14 +115,15 @@ namespace WebApplication_bookstoreApi.Services
             await _context.SaveChangesAsync();
         }
 
-        public Task<IEnumerable<Book>> GetGenresAsync()
+        public async Task<IEnumerable<string>> GetGenresAsync()
         {
-            throw new NotImplementedException();
-            //var genres = await _context.Books
-            //.Select(b => b.Genre)
-            //.Distinct()
-            //.OrderBy(g => g)
-            //.ToListAsync();
+            var genres = await _context.Books
+            .Select(b => b.Genre)
+            .Distinct()
+            .OrderBy(g => g)
+            .ToListAsync();
+
+            return genres;
         }
 
         public async Task<IEnumerable<BookDto>> FilterBooksAsync(string genre)

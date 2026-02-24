@@ -167,18 +167,14 @@ namespace WebApplication_bookstoreApi.Controllers
         /// Get list of available genres
         /// </summary>
         /// <returns>List of genres</returns>
-        //[HttpGet("genres")]
-        //[ProducesResponseType(StatusCodes.Status200OK)]
-        //public async Task<ActionResult<IEnumerable<string>>> GetGenres()
-        //{
-        //    var genres = await bookService.Books
-        //    .Select(b => b.Genre)
-        //    .Distinct()
-        //    .OrderBy(g => g)
-        //    .ToListAsync();
+        [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<string>>> GetGenres()
+        {
+            var genres = await bookService.GetGenresAsync();
 
-        //    return Ok(genres);
-        //}
+            return Ok(genres);
+        }
 
 
     }
