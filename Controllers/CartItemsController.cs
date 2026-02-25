@@ -9,11 +9,12 @@ namespace WebApplication_bookstoreApi.Controllers
     [ApiController]
     public class CartItemsController : ControllerBase
     {
-        private readonly ICartItemService _service;
+
+        private readonly ICartItemService _cartItemService;
 
         public CartItemsController(ICartItemService service)
         {
-            _service = service;
+            _cartItemService = service;
         }
 
 
@@ -22,24 +23,23 @@ namespace WebApplication_bookstoreApi.Controllers
         /// </summary>
         /// <returns>List of books</returns
         [HttpGet]
-        public async Task<IActionResult> GetCart()
+        public async Task<ActionResult<IEnumerable<CartItemDto>>> GetCart()
         {
-            var result = await _service.GetCartInfoAsync();
-            return Ok(result);
+            var cartItems = await _cartItemService.GetCartInfoAsync();
+            return Ok(cartItems);
         }
 
 
         /// <summary>
         /// Add a book to the cart
         /// </summary>
-        /// <param name="addToCartDto">Book Data</param>
+        /// <param name="cartItemDto">Book Data</param>
         /// <returns>Created book</returns>
         [HttpPost]
-        public async Task<IActionResult> AddToCart([FromBody] AddToCartDto addToCartDto)
+        public async Task<ActionResult<CartItemDto>> AddToCart([FromBody] CartItemDto cartItemDto)
         {
-
-            await _service.AddToTheCartAsync(addToCartDto);
-            return Ok("Item added to cart successfully");
+            var result = await _cartItemService.AddToTheCartAsync(cartItemDto);
+            return Ok(result);
         }
 
 
@@ -51,8 +51,9 @@ namespace WebApplication_bookstoreApi.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBook(int id)
         {
-            await _service.DeleteBookAsync(id);
-            return Ok("Item removed successfully");
+            await _cartItemService.DeleteBookAsync(id);
+            return NoContent();
         }
+
     }
 }

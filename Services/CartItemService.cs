@@ -16,58 +16,58 @@ namespace WebApplication_bookstoreApi.Services
 
         public async Task<IEnumerable<CartItemDto>> GetCartInfoAsync()
         {
-            var items = await _context.CartItems
-            .Select(item => new CartItemDto
-            {
-                Id = item.Id,
-                Title = item.Title,
-                Author = item.Author,
-                ItemPrice = item.ItemPrice,
-                Quantity = item.Quantity,
-                TotalPrice = item.ItemPrice * item.Quantity,
-                CoverImg = item.CoverImg
-            })
-            .ToListAsync();
-            return (items);
+            return await _context.CartItems
+                .Include(c => c.Book)
+                .Select(c => new CartItemDto
+                {
+                    Id = c.Id,
+                    Book = c.Book,
+                    Quantity = c.Quantity
+                })
+                .ToListAsync();
         }
 
-        public async Task<CartItemDto> AddToTheCartAsync(AddToCartDto addToCartDto)
+        public async Task<CartItemDto> AddToTheCartAsync(CartItemDto cartItemDto)
         {
-            var book = await _context.Books.FindAsync(addToCartDto.BookId);
+            var existingItem = await _context.CartItems
+                .FirstOrDefaultAsync(c => c.Id == cartItemDto.Id);
 
-            if (book == null)
-                throw new Exception("Book not found");
-
-            var cartItem = new CartItem
+            if (existingItem != null)
             {
-                BookId = book.Id,
-                Quantity = addToCartDto.Quantity
-            };
+                existingItem.Quantity += cartItemDto.Quantity;
+            }
+            else
+            {
+                var cartItem = new CartItem
+                {
+                    Id = cartItemDto.Id,
+                    Quantity = cartItemDto.Quantity
+                };
 
-            await _context.CartItems.AddAsync(cartItem);
+                await _context.CartItems.AddAsync(cartItem);
+            }
+
             await _context.SaveChangesAsync();
+
+            var book = await _context.Books.FindAsync(cartItemDto.Id);
 
             return new CartItemDto
             {
-                Id = cartItem.Id,
-                BookId = book.Id,
-                Title = book.Title,
-                Author = book.Author,
-                ItemPrice = book.Price,
-                Quantity = cartItem.Quantity,
-                TotalPrice = book.Price * cartItem.Quantity,
-                CoverImg = book.CoverImg
+                Id = cartItemDto.Id,
+                Book = book!,
+                Quantity = cartItemDto.Quantity
             };
         }
 
         public async Task DeleteBookAsync(int id)
         {
-            var item = await _context.CartItems.FindAsync(id);
+            var cartItem = await _context.CartItems
+                .FirstOrDefaultAsync(c => c.Id == id);
 
-            if (item == null)
-                throw new Exception("Item not found");
+            if (cartItem == null)
+                throw new KeyNotFoundException("Book not found in cart.");
 
-            _context.CartItems.Remove(item);
+            _context.CartItems.Remove(cartItem);
             await _context.SaveChangesAsync();
         }
     }
