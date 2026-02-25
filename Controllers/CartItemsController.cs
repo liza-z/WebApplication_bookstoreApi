@@ -48,11 +48,11 @@ namespace WebApplication_bookstoreApi.Controllers
         /// </summary>
         /// <param name="id">Book ID</param>
         /// <returns>Deletion confirmation</returns>
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteBook(int id)
+        [HttpDelete]
+        public async Task<IActionResult> DeleteBook(CartItemDto cartItemDto)
         {
-            await _cartItemService.DeleteBookAsync(id);
-            return NoContent();
+            await _cartItemService.DeleteBookAsync(cartItemDto);
+            return Ok(new { message = "Book has been deleted successfully" });
         }
 
     }

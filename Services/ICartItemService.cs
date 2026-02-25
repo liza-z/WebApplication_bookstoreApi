@@ -6,7 +6,7 @@ namespace WebApplication_bookstoreApi.Services
     {
         Task<IEnumerable<CartItemDto>> GetCartInfoAsync();
         Task<CartItemDto> AddToTheCartAsync(CartItemDto cartItemDto);
-        Task DeleteBookAsync(int id);
+        Task DeleteBookAsync(CartItemDto cartItemDto);
 
     }
 }

@@ -59,10 +59,10 @@ namespace WebApplication_bookstoreApi.Services
             };
         }
 
-        public async Task DeleteBookAsync(int id)
+        public async Task DeleteBookAsync(CartItemDto cartItemDto)
         {
             var cartItem = await _context.CartItems
-                .FirstOrDefaultAsync(c => c.Id == id);
+                .FirstOrDefaultAsync(c => c.Id == cartItemDto.Id);
 
             if (cartItem == null)
                 throw new KeyNotFoundException("Book not found in cart.");
